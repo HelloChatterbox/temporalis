@@ -5,3 +5,5 @@ geocoder
 pendulum
 python-dateutil
 pytz
+requests-cache
+astral

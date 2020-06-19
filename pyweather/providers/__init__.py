@@ -1,15 +1,21 @@
-from pyweather.location import geolocate
-from pyweather import WeatherDataPoint, DailyForecast, HourlyForecast, \
-    MinutelyForecast, DayWeather, HourWeather, MinuteWeather
-from pendulum import now, timezone
+from pyweather.location import geolocate, get_timezone
+from pyweather.sun import get_dawn, get_dusk, get_sunrise, get_sunset, get_noon
+from pyweather import WeatherData, DailyForecast, HourlyForecast
+from pyweather.time import now_utc
+from pyweather.moon import get_moon_phase, moon_code_to_symbol, moon_code_to_name
+from pendulum import timezone
 import pendulum
-from pprint import pprint
+from requests_cache import CachedSession
+from datetime import timedelta
 
 
 class WeatherProvider:
-    def __init__(self, lat, lon, date=None, units="metric"):
+    expire_after = timedelta(hours=1)
+    session = CachedSession(backend='memory', expire_after=expire_after)
 
-        self.datetime = date or now()
+    def __init__(self, lat, lon, date=None, units="metric", lang="en"):
+        self.lang = lang
+        self.datetime = date or now_utc()
         if units in ["english", "imperial", "us"]:
             units = "us"
 
@@ -28,12 +34,12 @@ class WeatherProvider:
         #
         #     summary: Any summaries containing temperature or snow accumulation units will have their values in degrees Celsius or in centimeters (respectively).
         #     nearestStormDistance: Kilometers.
-        #     precipIntensity: Millimeters per hour.
-        #     precipIntensityMax: Millimeters per hour.
+        #     precipitation: Millimeters per hour.
+        #     precipitation.max_val: Millimeters per hour.
         #     precipAccumulation: Centimeters.
         #     temperature: Degrees Celsius.
-        #     temperatureMin: Degrees Celsius.
-        #     temperatureMax: Degrees Celsius.
+        #     temperature.min_val: Degrees Celsius.
+        #     temperature.max_val: Degrees Celsius.
         #     apparentTemperature: Degrees Celsius.
         #     dewPoint: Degrees Celsius.
         #     windSpeed: Meters per second.
@@ -50,6 +56,45 @@ class WeatherProvider:
                      "daily": {},
                      "hourly": {}}
 
+    # sun
+    @property
+    def dawn(self):
+        return get_dawn(self.latitude, self.longitude, self.datetime)
+
+    @property
+    def sunrise(self):
+        return get_sunrise(self.latitude, self.longitude, self.datetime)
+
+    @property
+    def noon(self):
+        return get_noon(self.latitude, self.longitude, self.datetime)
+
+    @property
+    def sunset(self):
+        return get_sunset(self.latitude, self.longitude, self.datetime)
+
+    @property
+    def dusk(self):
+        return get_dusk(self.latitude, self.longitude, self.datetime)
+
+    # moon
+    @property
+    def moon_phase(self):
+        return get_moon_phase(self.datetime)[0]
+
+    @property
+    def moon_code(self):
+        return get_moon_phase(self.datetime)[0]
+
+    @property
+    def moon_symbol(self):
+        return moon_code_to_symbol(self.moon_code)
+
+    @property
+    def moon_phase_name(self):
+        return moon_code_to_name(self.moon_symbol)
+
+    # localization
     @property
     def units(self):
         return self._units
@@ -63,23 +108,18 @@ class WeatherProvider:
         return self.data["longitude"]
 
     @staticmethod
-    def from_address(address, key):
+    def from_address(address, key=None):
         lat, lon = geolocate(address)
-        return WeatherProvider(lat, lon, key)
+        return WeatherProvider(lat, lon)
 
     @property
     def timezone(self):
-        tz = self.data["timezone"]
-        return timezone(tz)
+        return get_timezone(latitude=self.latitude, longitude=self.longitude)
 
-    def _stamp_to_datetime(self, stamp, tz_name=None):
-        if tz_name:
-            return pendulum.from_timestamp(stamp, tz=timezone(tz_name))
-        return pendulum.from_timestamp(stamp, tz=self.timezone)
-
+    # weather forecasts
     @property
     def weather(self):
-        return WeatherDataPoint().from_json(self.data["currently"])
+        return WeatherData().from_dict(self.data["currently"])
 
     @property
     def weather_tomorrow(self):
@@ -94,17 +134,18 @@ class WeatherProvider:
     def hourly(self):
         daily = self.data["hourly"]
 
-        hourly_weather = WeatherDataPoint()
+        hourly_weather = WeatherData()
         hourly_weather.icon = daily["icon"]
         hourly_weather.summary = daily["summary"]
         hourly_weather.datetime = self.datetime
 
         hours = []
         for hour in daily["data"]:
-            weather = WeatherDataPoint().from_json(hour)
-            date = hour.get("time") or hour.get("datetime") or self.datetime
-            time = self._stamp_to_datetime(date)
-            hours.append(HourWeather(time, weather))
+            if isinstance(hour, dict):
+                weather = WeatherData().from_dict(hour)
+            else:
+                weather = hour
+            hours.append(weather)
 
         return HourlyForecast(self.datetime, hours, hourly_weather)
 
@@ -116,43 +157,21 @@ class WeatherProvider:
     def daily(self):
         daily = self.data["daily"]
 
-        daily_weather = WeatherDataPoint()
+        daily_weather = WeatherData()
         if daily.get("icon"):
             daily_weather.icon = daily["icon"]
             daily_weather.summary = daily["summary"]
         else:
-            daily_weather.icon = daily["data"][0]["icon"]
-            daily_weather.summary = daily["data"][0]["summary"]
+            daily_weather.icon = daily["data"][0].icon
+            daily_weather.summary = daily["data"][0].summary
         daily_weather.datetime = self.datetime
-
-        days = []
-        for day in daily["data"]:
-            date = day.get("time") or day.get("datetime") or self.datetime
-            time = self._stamp_to_datetime(date)
-            weather = WeatherDataPoint().from_json(day)
-
-            dayw = DayWeather(time, weather)
-            if day.get("sunriseTime"):
-                dayw.sunriseTime = self._stamp_to_datetime(
-                    day["sunriseTime"], day.get("timezone"))
-            if day.get("sunsetTime"):
-                dayw.sunsetTime = self._stamp_to_datetime(
-                    day["sunsetTime"], day.get("timezone"))
-
-            dayw.moonPhase = day.get("moonPhase")
-
-            for hour in self.hours:
-                if hour.datetime.day == time.day:
-                    dayw.hours[hour.datetime.hour] = hour
-
-            days.append(dayw)
-
-        return DailyForecast(self.datetime, days, daily_weather)
+        return DailyForecast(self.datetime, daily["data"], daily_weather)
 
     @property
     def days(self):
         return self.daily.days
 
+    # pretty print
     def print(self):
         self.weather.print()
 
@@ -166,48 +185,50 @@ class WeatherProvider:
         for hour in self.hours:
             print(hour.weekday, ":", hour.datetime.time(), ":", hour.summary)
 
+    # internals
+    def _stamp_to_datetime(self, stamp, tz_name=None):
+        if tz_name:
+            return pendulum.from_timestamp(stamp, tz=timezone(tz_name))
+        return pendulum.from_timestamp(stamp, tz=self.timezone)
+
     @staticmethod
     def _calc_day_average(hours):
-        day = hours[0]
-        day.precipIntensityMax = 0
-        day.precipIntensityMin = day.precipIntensity
+        data = hours[0].as_dict()
+
         for idx, d in enumerate(hours):
-            if d.temperatureMin < day.temperatureMin:
-                day.temperatureMin = d.temperatureMin
-                day.temperatureMinTime = d.datetime
-            if d.temperatureMax > day.temperatureMax:
-                day.temperatureMax = d.temperatureMax
-                day.temperatureMaxTime = d.datetime
-            if d.temperatureLow < day.temperatureLow:
-                day.temperatureLow = d.temperatureLow
-                day.temperatureLowTime = d.datetime
-            if d.temperatureHigh > day.temperatureHigh:
-                day.temperatureHigh = d.temperatureHigh
-                day.temperatureHighTime = d.datetime
+            new_data = d.as_dict()
+            for k in new_data:
+                try:
+                    if new_data[k]["min_val"] < data[k]["min_val"]:
+                        data[k]["min_val"] = new_data[k]["min_val"]
+                        data[k]["min_time"] = new_data[k]["time"]
+                    if new_data[k]["max_val"] > data[k]["max_val"]:
+                        data[k]["max_val"] = new_data[k]["max_val"]
+                        data[k]["max_time"] = new_data[k]["time"]
+                    offset = new_data[k]["max_val"] - new_data[k]["min_val"]
+                    new_data[k]["val"] = new_data[k]["min_val"] + offset / 2
+                except:
+                    pass
+                try:
+                    if new_data[k]["prob_min"] < data[k]["prob_min"]:
+                        data[k]["prob_min"] = new_data[k]["prob_min"]
+                    if new_data[k]["prob_max"] > data[k]["prob_max"]:
+                        data[k]["prob_max"] = new_data[k]["prob_max"]
+                    offset = new_data[k]["prob_max"] - new_data[k]["prob_min"]
+                    new_data[k]["prob"] = new_data[k]["prob_min"] + offset / 2
+                except:
+                    pass
 
-            if d.precipIntensity and d.precipIntensity > \
-                    day.precipIntensityMax:
-                day.precipIntensityMax = d.precipIntensity
-                day.precipIntensityMaxTime = d.datetime
-
-            if not day.precipIntensityMin or d.precipIntensity and \
-                    d.precipIntensity < day.precipIntensityMin:
-                day.precipIntensityMin = d.precipIntensity
-
-        # average hourly predictions
-        day.temperature = day.temperatureMin + \
-                          (day.temperatureMax - day.temperatureMin) / 2
-        return day
-
+        return data
 
     @staticmethod
     def _calc_hourly_summary(hours):
-        hourly_summary = hours[0]["summary"]
-        hourly_icon = hours[0]["icon"]
+        hourly_summary = hours[0].summary
+        hourly_icon = hours[0].icon
         return hourly_summary, hourly_icon
 
     @staticmethod
     def _calc_daily_summary(days):
-        hourly_summary = days[0]["summary"]
-        hourly_icon = days[0]["icon"]
+        hourly_summary = days[0].summary
+        hourly_icon = days[0].icon
         return hourly_summary, hourly_icon

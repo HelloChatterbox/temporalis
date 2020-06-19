@@ -1,10 +1,10 @@
 from pyweather.location import geolocate
-import requests
 from pyweather.providers import WeatherProvider
 
 
 class DarkSky(WeatherProvider):
     def __init__(self, lat, lon, key, date=None, units="metric"):
+        print("WARNING: darksky is shutting down, see https://blog.darksky.net/")
         if units in ["english", "imperial", "us"]:
             units = "us"
         elif units == "metric":
@@ -53,12 +53,12 @@ class DarkSky(WeatherProvider):
 
     def _request(self):
         params = {"units": self._units}
-        return requests.get(self.url, params=params).json()
+        return self.session.get(self.url, params=params).json()
 
 
 if __name__ == "__main__":
     lat, lon = 38.7222, -9.1393
-    DARKSKY_KEY = "XXXXX"
+    DARKSKY_KEY = ""
     #d = DarkSky.from_address("Campbell California", DARKSKY_KEY)
     #date = now()
     d = DarkSky(lat, lon, DARKSKY_KEY)

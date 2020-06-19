@@ -109,4 +109,3 @@ def int_to_weekday(weekday):
         return "sunday"
     return str(weekday)
 
-

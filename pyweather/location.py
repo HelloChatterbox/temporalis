@@ -3,9 +3,17 @@ import geocoder
 from timezonefinder import TimezoneFinder
 import datetime as dt
 import pytz
+from astral.geocoder import database, lookup
 
 
 def geolocate(address, try_all=True):
+    try:
+        # see https://astral.readthedocs.io/en/latest/#cities
+        a = lookup(address, database())
+        return a.latitude, a.longitude
+    except:
+        pass  # use online geocoder
+
     location_data = geocoder.geonames(address, method='details', key='jarbas')
     if not location_data.ok:
         location_data = geocoder.geocodefarm(address)
@@ -74,3 +82,4 @@ def possible_timezones(tz_offset, common_only=True):
             results.append(tz_name)
 
     return results
+
