@@ -67,41 +67,52 @@ class OWM(WeatherProvider):
         """
 
         pressure = entry["main"].get("pressure")
-        pressure = DataPoint("Pressure", pressure, "hPa")
+        if pressure is not None:
+            pressure = DataPoint("Pressure", pressure, "hPa")
 
         cloudCover = entry.get("clouds", {}).get("all")
-        if cloudCover:
+        if cloudCover is not None:
             cloudCover = DataPoint("CloudCover", cloudCover, "%")
 
         visibility = entry.get("visibility")
-        if visibility:
+        if visibility is not None:
             visibility = DataPoint("Visibility", visibility, "m")
 
         humidity = entry["main"].get("humidity")
-        if humidity:
+        if humidity is not None:
             humidity = DataPoint("Humidity", humidity, "%")
 
         temperature = entry["main"].get("temp")
-        temperature_min = entry["main"].get("temp_min")
-        temperature_max = entry["main"].get("temp_max")
-        if self.units == "metric":
-            unit = "ºC"
-        elif self.units == "si":
-            unit = "k"
-        else:
-            unit = "ºF"
-        temperature = DataPoint("Temperature", temperature, unit,
-                                min_val=temperature_min,
-                                max_val=temperature_max)
+        if temperature is not None:
+            temperature_min = entry["main"].get("temp_min")
+            temperature_max = entry["main"].get("temp_max")
+            if self.units == "metric":
+                unit = "ºC"
+            elif self.units == "si":
+                unit = "K"
+            else:
+                unit = "ºF"
+            temperature = DataPoint("Temperature", temperature, unit,
+                                    min_val=temperature_min,
+                                    max_val=temperature_max)
 
         ap_temperature = entry["main"].get("feels_like") or temperature
-        ap_temperature = DataPoint("ApparentTemperature", ap_temperature, unit)
+        if ap_temperature is not None:
+            if self.units == "metric":
+                unit = "ºC"
+            elif self.units == "si":
+                unit = "K"
+            else:
+                unit = "ºF"
+            ap_temperature = DataPoint("ApparentTemperature", ap_temperature, unit)
 
         wind_speed = entry.get("wind", {}).get("speed")
-        wind_speed = DataPoint("WindSpeed", wind_speed, "m/s")
+        if wind_speed  is not None:
+            wind_speed = DataPoint("WindSpeed", wind_speed, "m/s")
 
         wind_bearing = entry.get("wind", {}).get("deg")
-        wind_bearing = DataPoint("WindBearing", wind_bearing, "º")
+        if wind_bearing is not None:
+            wind_bearing = DataPoint("WindBearing", wind_bearing, "º")
 
         _w = entry.get("weather", [])
         icon = ""
@@ -166,36 +177,37 @@ class OWM(WeatherProvider):
         _days = {}
         for entry in res["list"]:
             pressure = entry["main"].get("pressure")
-            pressure = DataPoint("Pressure", pressure, "hPa")
+            if pressure is not None:
+                pressure = DataPoint("Pressure", pressure, "hPa")
 
             cloudCover = entry.get("clouds", {}).get("all")
-            if cloudCover:
+            if cloudCover is not None:
                 cloudCover = DataPoint("CloudCover", cloudCover, "%")
 
             visibility = entry.get("visibility")
-            if visibility:
+            if visibility is not None:
                 visibility = DataPoint("Visibility", visibility, "m")
 
             humidity = entry["main"].get("humidity")
-            if humidity:
+            if humidity is not None:
                 humidity = DataPoint("Humidity", humidity, "%")
 
             temperature = entry["main"].get("temp")
-            temperature_min = entry["main"].get("temp_min")
-            temperature_max = entry["main"].get("temp_max")
             if self.units == "metric":
                 unit = "ºC"
             elif self.units == "si":
                 unit = "k"
             else:
                 unit = "ºF"
-
-            temperature = DataPoint("Temperature", temperature, unit,
-                                    min_val=temperature_min,
-                                    max_val=temperature_max)
+            if temperature is not None:
+                temperature_min = entry["main"].get("temp_min")
+                temperature_max = entry["main"].get("temp_max")
+                temperature = DataPoint("Temperature", temperature, unit,
+                                        min_val=temperature_min,
+                                        max_val=temperature_max)
 
             ap_temperature = entry["main"].get("feels_like")
-            if ap_temperature:
+            if ap_temperature is not None:
                 ap_temperature = DataPoint("ApparentTemperature", ap_temperature,
                                            unit)
             else:
@@ -204,10 +216,12 @@ class OWM(WeatherProvider):
                                     max_val=temperature_max)
 
             wind_speed = entry.get("wind", {}).get("speed")
-            wind_speed = DataPoint("WindSpeed", wind_speed, "m/s")
+            if wind_speed is not None:
+                wind_speed = DataPoint("WindSpeed", wind_speed, "m/s")
 
             wind_bearing = entry.get("wind", {}).get("deg")
-            wind_bearing = DataPoint("WindBearing", wind_bearing, "º")
+            if wind_bearing is not None:
+                wind_bearing = DataPoint("WindBearing", wind_bearing, "º")
 
             _w = entry.get("weather", [])
             icon = ""
@@ -274,11 +288,11 @@ if __name__ == "__main__":
     date = now()
     print(date)
 
-    d = OWM.from_address("Porto Portugal")
-    print(d.latitude, d.longitude)
-    exit()
+    #d = OWM.from_address("Porto Portugal")
+    #print(d.latitude, d.longitude)
+
     lat, lon = 38.7222563442538, -9.1393314973889
-    #d = OWM(lat, lon)
+    d = OWM(lat, lon)
 
     print("##### CURRENT WEATHER ######")
     d.print()
