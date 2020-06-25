@@ -2,7 +2,8 @@ from pyweather.location import geolocate, get_timezone
 from pyweather.sun import get_dawn, get_dusk, get_sunrise, get_sunset, get_noon
 from pyweather import WeatherData, DailyForecast, HourlyForecast
 from pyweather.time import now_utc
-from pyweather.moon import get_moon_phase, moon_code_to_symbol, moon_code_to_name
+from pyweather.moon import get_moon_phase, moon_code_to_symbol, \
+    moon_code_to_name
 from pendulum import timezone
 import pendulum
 from requests_cache import CachedSession
@@ -176,12 +177,12 @@ class WeatherProvider:
         self.weather.print()
 
     def print_daily(self):
-        #self.daily.print()
+        # self.daily.print()
         for day in self.days:
             print(day.weekday, ":", day.datetime.date(), ":", day.summary)
 
     def print_hourly(self):
-        #self.hourly.print()
+        # self.hourly.print()
         for hour in self.hours:
             print(hour.weekday, ":", hour.datetime.time(), ":", hour.summary)
 

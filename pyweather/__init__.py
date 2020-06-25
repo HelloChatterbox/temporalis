@@ -1,23 +1,30 @@
 from pyweather.time import int_to_weekday
 import pendulum
+from pprint import pprint
 
 
 class DataPoint:
     def __init__(self, name, value, units,
                  min_val=None, max_val=None,
+                 low_val=None, high_val=None,
                  time=None, min_time=None, max_time=None,
+                 low_time=None, high_time=None,
                  prob=None, prob_min=None, prob_max=None):
         self.name = name
         self.units = units
         self.value = value
         self.min_val = min_val or value
         self.max_val = max_val or value
+        self.low_val = low_val or self.min_val
+        self.high_val = high_val or self.max_val
         self.prob = prob  # probability of value
         self.prob_min = prob_min or prob  # probability of min_value
         self.prob_max = prob_max or prob  # probability of max_value
         self.time = time  # ts of prediction
         self.min_time = min_time or time  # predicted ts for min
         self.max_time = max_time or time  # predicted ts for max
+        self.low_time = low_time or time
+        self.high_time = high_time or time
 
     @staticmethod
     def _stamp_to_datetime(stamp, tz=None):
@@ -33,7 +40,7 @@ class DataPoint:
 
     @staticmethod
     def from_dict(data):
-        if not data:
+        if not isinstance(data, int) and not data:
             return None
         if isinstance(data, DataPoint):
             return data
@@ -88,9 +95,13 @@ class WeatherData:
         self.windBearing = None
         self.windGust = None
         self.windSpeed = None
+        self.snow = None
 
     def __repr__(self):
         return str(self.datetime) + ":" + self.summary
+
+    def pprint(self):
+        pprint(self.as_dict())
 
     def print(self):
         print(self.weekday, self.datetime.date(), self.datetime.time(),
@@ -159,6 +170,7 @@ class WeatherData:
         point.windGust = DataPoint.from_dict(data.get("windGust"))
         point.windSpeed = DataPoint.from_dict(data.get("windSpeed"))
         point.precipitation = DataPoint.from_dict(data.get("precipitation"))
+        point.snow = DataPoint.from_dict(data.get("snow"))
 
         return point
 
@@ -188,7 +200,10 @@ class HourlyForecast:
     def print(self):
         print(self.datetime, ":", self.summary)
 
-    def as_json(self):
+    def pprint(self):
+        pprint(self.as_dict())
+
+    def as_dict(self):
         return {"datetime": self.datetime,
                 "hours": [m.as_dict() for m in self.hours],
                 "weather": self.weather.as_dict()}
@@ -209,6 +224,9 @@ class DailyForecast:
 
     def print(self):
         print(self.datetime, ":", self.summary)
+
+    def pprint(self):
+        pprint(self.as_dict())
 
     @property
     def summary(self):

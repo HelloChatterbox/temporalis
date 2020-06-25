@@ -89,15 +89,15 @@ def moon_phase_to_inaccurate_code(phase):
     phase = int(phase)
     if phase == 0:
         return 0
-    elif phase > 0 and phase < 7:
+    elif 0 < phase < 7:
         return 1
     elif phase == 7:
         return 2
-    elif phase > 7 and phase < 14:
+    elif 7 < phase < 14:
         return 3
     elif phase == 14:
         return 4
-    elif phase > 14 and phase < 21:
+    elif 14 < phase < 21:
         return 5
     elif phase == 21:
         return 6
@@ -109,13 +109,11 @@ def get_moon_phase(date):
     phase_today = moon.phase(date=date)
     code_today = moon_phase_to_inaccurate_code(phase_today)
 
-    if code_today % 2 != 0:
-        return phase_today, code_today
+    if code_today % 2 == 0:
+        phase_yesterday = moon.phase(date=date - timedelta(days=1))
+        code_yesterday = moon_phase_to_inaccurate_code(phase_yesterday)
 
-    phase_yesterday = moon.phase(date=date - timedelta(days=1))
-    code_yesterday = moon_phase_to_inaccurate_code(phase_yesterday)
-
-    if code_today == code_yesterday:
-        return phase_today, code_today + 1
+        if code_today == code_yesterday:
+            return phase_today, code_today + 1
 
     return phase_today, code_today

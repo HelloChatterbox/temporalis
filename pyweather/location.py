@@ -1,7 +1,7 @@
 from geopy.geocoders import Yandex, Nominatim
 import geocoder
 from timezonefinder import TimezoneFinder
-import datetime as dt
+from datetime import timedelta
 import pytz
 from astral.geocoder import database, lookup
 
@@ -57,8 +57,7 @@ def reverse_geolocate(lat, lon):
 
 
 def get_timezone(latitude, longitude):
-    tf = TimezoneFinder()
-    return tf.timezone_at(lng=longitude, lat=latitude)
+    return TimezoneFinder().timezone_at(lng=longitude, lat=latitude)
 
 
 def possible_timezones(tz_offset, common_only=True):
@@ -70,10 +69,10 @@ def possible_timezones(tz_offset, common_only=True):
     if offset_seconds < 0:
         offset_days = -1
         offset_seconds += 24 * 3600
-    desired_delta = dt.timedelta(offset_days, offset_seconds)
+    desired_delta = timedelta(offset_days, offset_seconds)
 
     # Loop through the timezones and find any with matching offsets
-    null_delta = dt.timedelta(0, 0)
+    null_delta = timedelta(0, 0)
     results = []
     for tz_name in timezones:
         tz = pytz.timezone(tz_name)
