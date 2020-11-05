@@ -109,3 +109,6 @@ def int_to_weekday(weekday):
         return "sunday"
     return str(weekday)
 
+
+def in_utc(date):
+    return date.in_timezone("UTC")

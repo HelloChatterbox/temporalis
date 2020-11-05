@@ -1,7 +1,6 @@
 from pyweather.location import geolocate
 from pyweather.providers import WeatherProvider
 from pyweather import WeatherData, DataPoint
-from pendulum import now
 
 
 class OWM(WeatherProvider):
@@ -285,26 +284,3 @@ class OWM(WeatherProvider):
         self._request_current()
         self._request_forecast()
 
-
-if __name__ == "__main__":
-    from pprint import pprint
-
-    date = now()
-    print(date)
-
-    # d = OWM.from_address("Porto Portugal")
-    # print(d.latitude, d.longitude)
-
-    lat, lon = 38.7222563442538, -9.1393314973889
-    d = OWM(lat, lon)
-
-    print("##### CURRENT WEATHER ######")
-    d.print()
-
-    print("\n##### DAILY FORECAST ######")
-    d.print_daily()
-
-    print("\n##### HOURLY FORECAST ######")
-    d.print_hourly()
-
-    print(d.daily[0].as_dict())

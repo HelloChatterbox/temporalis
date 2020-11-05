@@ -85,7 +85,7 @@ class WeatherProvider:
 
     @property
     def moon_code(self):
-        return get_moon_phase(self.datetime)[0]
+        return get_moon_phase(self.datetime)[1]
 
     @property
     def moon_symbol(self):
@@ -93,7 +93,7 @@ class WeatherProvider:
 
     @property
     def moon_phase_name(self):
-        return moon_code_to_name(self.moon_symbol)
+        return moon_code_to_name(self.moon_code, self.lang)
 
     # localization
     @property

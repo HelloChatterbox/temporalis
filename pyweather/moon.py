@@ -1,5 +1,6 @@
 from datetime import timedelta
 from astral import moon
+from pyweather.time import in_utc
 
 moon_phase_names = {'en':
                         ('New moon',
@@ -106,6 +107,7 @@ def moon_phase_to_inaccurate_code(phase):
 
 
 def get_moon_phase(date):
+    date = in_utc(date)
     phase_today = moon.phase(date=date)
     code_today = moon_phase_to_inaccurate_code(phase_today)
 
