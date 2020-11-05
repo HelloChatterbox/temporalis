@@ -1,6 +1,6 @@
-from pyweather.location import geolocate
-from pyweather.providers import WeatherProvider
-from pyweather import WeatherData, DataPoint
+from temporalis.location import geolocate
+from temporalis.providers import WeatherProvider
+from temporalis import WeatherData, DataPoint
 
 
 class OWM(WeatherProvider):

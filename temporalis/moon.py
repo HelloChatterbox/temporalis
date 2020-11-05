@@ -1,6 +1,6 @@
 from datetime import timedelta
 from astral import moon
-from pyweather.time import in_utc
+from temporalis.time import in_utc
 
 moon_phase_names = {'en':
                         ('New moon',

@@ -1,8 +1,8 @@
-from pyweather.location import geolocate, get_timezone
-from pyweather.sun import get_dawn, get_dusk, get_sunrise, get_sunset, get_noon
-from pyweather import WeatherData, DailyForecast, HourlyForecast
-from pyweather.time import now_utc
-from pyweather.moon import get_moon_phase, moon_code_to_symbol, \
+from temporalis.location import geolocate, get_timezone
+from temporalis.sun import get_dawn, get_dusk, get_sunrise, get_sunset, get_noon
+from temporalis import WeatherData, DailyForecast, HourlyForecast
+from temporalis.time import now_utc
+from temporalis.moon import get_moon_phase, moon_code_to_symbol, \
     moon_code_to_name
 from pendulum import timezone
 import pendulum

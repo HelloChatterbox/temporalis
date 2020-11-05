@@ -1,9 +1,9 @@
 from setuptools import setup
 
 setup(
-    name='pyweather',
+    name='temporalis',
     version='0.1',
-    packages=['pyweather', 'pyweather.providers'],
+    packages=['temporalis', 'temporalis.providers'],
     url='https://github.com/HelloChatterbox/pyweather',
     license='Apache2',
     author='jarbasAi',

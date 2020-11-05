@@ -1,8 +1,8 @@
 import pendulum
 from astral import LocationInfo
 from astral.sun import sun
-from pyweather.location import get_timezone
-from pyweather.time import now_utc
+from temporalis.location import get_timezone
+from temporalis.time import now_utc
 
 
 def get_sun_times(lat, lon, date=None):

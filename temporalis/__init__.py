@@ -1,4 +1,4 @@
-from pyweather.time import int_to_weekday
+from temporalis.time import int_to_weekday
 import pendulum
 from pprint import pprint
 

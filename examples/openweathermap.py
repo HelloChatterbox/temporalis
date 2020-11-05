@@ -1,4 +1,4 @@
-from pyweather.providers.owm import OWM
+from temporalis.providers.owm import OWM
 from pprint import pprint
 
 
