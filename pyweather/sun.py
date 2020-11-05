@@ -5,62 +5,35 @@ from pyweather.location import get_timezone
 from pyweather.time import now_utc
 
 
-def get_dawn(lat, lon, date=None):
+def get_sun_times(lat, lon, date=None):
     date = date or now_utc()
     tz = get_timezone(lat, lon)
     city = LocationInfo("Some city", "Some location",
                         tz, lat, lon)
     s = sun(city.observer, date=date)
-    dt = s["dawn"]
+    # inject timezone data
     tz = pendulum.timezone(tz)
-    dt = tz.datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
-    return dt
+    for k in s:
+        s[k] = tz.datetime(s[k].year, s[k].month, s[k].day,
+                           s[k].hour, s[k].minute, s[k].second)
+    return s
+
+
+def get_dawn(lat, lon, date=None):
+    return get_sun_times(lat, lon, date)["dawn"]
 
 
 def get_sunrise(lat, lon, date=None):
-    date = date or now_utc()
-    tz = get_timezone(lat, lon)
-    city = LocationInfo("Some city", "Some location",
-                        tz, lat, lon)
-    s = sun(city.observer, date=date)
-    dt = s["sunrise"]
-    tz = pendulum.timezone(tz)
-    dt = tz.datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
-    return dt
+    return get_sun_times(lat, lon, date)["sunrise"]
 
 
 def get_noon(lat, lon, date=None):
-    date = date or now_utc()
-    tz = get_timezone(lat, lon)
-    city = LocationInfo("Some city", "Some location",
-                        tz, lat, lon)
-    s = sun(city.observer, date=date)
-    dt = s["noon"]
-    tz = pendulum.timezone(tz)
-    dt = tz.datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
-    return dt
+    return get_sun_times(lat, lon, date)["noon"]
 
 
 def get_sunset(lat, lon, date=None):
-    date = date or now_utc()
-    tz = get_timezone(lat, lon)
-    city = LocationInfo("Some city", "Some location",
-                        tz, lat, lon)
-    s = sun(city.observer, date=date)
-    dt = s["sunset"]
-    tz = pendulum.timezone(tz)
-    dt = tz.datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
-    return dt
+    return get_sun_times(lat, lon, date)["sunset"]
 
 
 def get_dusk(lat, lon, date=None):
-    date = date or now_utc()
-    tz = get_timezone(lat, lon)
-    city = LocationInfo("Some city", "Some location",
-                        tz, lat, lon)
-    s = sun(city.observer, date=date)
-    dt = s["dusk"]
-    tz = pendulum.timezone(tz)
-    dt = tz.datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
-    return dt
-
+    return get_sun_times(lat, lon, date)["dusk"]
